@@ -1,0 +1,381 @@
+<!DOCTYPE HTML>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thailand Region Map | Longdo Map</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Prompt:wght@400;700&display=swap");
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background-color: #484848;
+      color: #cfd8dc;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1030;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease;
+      padding: 1rem;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar .logo {
+      text-align: center;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+
+    .sidebar .logo img {
+      width: 200px;
+      height: auto;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar.collapsed .logo img {
+      width: 50px;
+    }
+
+    .sidebar .nav-link {
+      color: #cfd8dc;
+      white-space: nowrap;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-radius: 0.375rem;
+      transition: background-color 0.3s, color 0.3s;
+      text-decoration: none;
+    }
+
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background-color: #2e3e55;
+      color: #fff;
+    }
+
+    .sidebar.collapsed .nav-link {
+      justify-content: center;
+      padding: 0.75rem 0;
+    }
+
+    .sidebar.collapsed .nav-text {
+      display: none;
+    }
+
+    /* Content */
+    .content {
+      margin-left: 250px;
+      padding: 1rem 1.5rem;
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+      background-color: #fff;
+    }
+
+    .sidebar.collapsed ~ .content {
+      margin-left: 70px;
+    }
+
+    /* Sidebar toggle button */
+    .sidebar-toggle-btn {
+      align-self: flex-end;
+      margin-bottom: 1rem;
+      background: none;
+      border: none;
+      color: #cfd8dc;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .sidebar-toggle-btn:hover {
+      color: #fff;
+    }
+
+    /* Map styling */
+    #map {
+      width: 100%;
+      height: calc(100vh - 130px); /* ปรับตามความสูง topbar + padding */
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+    }
+
+    /* Button group */
+    #buttonArea {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 1050;
+    }
+
+    #buttonArea>a {
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-family: "Poppins", sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      user-select: none;
+      background-color: #fff;
+      color: #000;
+      border: 2px solid transparent;
+      box-shadow: 0 3px 7px rgb(0 0 0 / 0.1);
+      transition: all 0.25s ease-in-out;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    #buttonArea>a:hover {
+      background-color: #000;
+      color: #fff;
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
+      border-color: #000;
+    }
+
+    #buttonArea>a.active {
+      background-color: #000;
+      color: #fff;
+      border-color: #000;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Label style override for Longdo Map */
+    .ldmap_placeholder .ldmap_frame .ldmap_geomlabel {
+      font-size: 14px !important;
+      color: #756d6d !important;
+      box-shadow: none !important;
+      background: none !important;
+    }
+    .region-label {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  pointer-events: none;
+  display: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+
+  </style>
+</head>
+
+<body class="sidebar-collapsed">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <a href="#" class="nav-link active"><i class="bi bi-house-door"></i><span class="nav-text">หน้าหลัก</span></a>
+    <a href="#" class="nav-link"><i class="bi bi-bus-front"></i><span class="nav-text">จัดการรถ</span></a>
+    <a href="#" class="nav-link"><i class="bi bi-person-badge"></i><span class="nav-text">พนักงาน</span></a>
+    <a href="#" class="nav-link"><i class="bi bi-clock-history"></i><span class="nav-text">ประวัติ</span></a>
+    <a href="#" class="nav-link"><i class="bi bi-gear"></i><span class="nav-text">ตั้งค่า</span></a>
+  </div>
+
+  <div class="content flex-grow-1">
+    <!-- Topbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4 px-4">
+      <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topbarNav"
+          aria-controls="topbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topbarNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-flex align-items-center">
+            <li class="nav-item d-flex align-items-center me-3">
+              <img src="https://img5.pic.in.th/file/secure-sv1/752440-01-removebg-preview.png" alt="Logo"
+                style="width: 100px; height: auto; user-select: none" />
+            </li>
+            <li class="nav-item"><a class="nav-link" href="dashboard.php">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="manage2.php">คิวการเดินรถ</a></li>
+            <li class="nav-item"><a class="nav-link" href="bus_schedule.php">จัดการการเดินรถ</a></li>
+            <li class="nav-item"><a class="nav-link" href="car_edit.php">วางแผนรถ</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">รายงานและประวัติ</a></li>
+          </ul>
+          <span class="navbar-text text-muted" id="datetime"></span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Map -->
+    <div id="map"></div>
+    <div id="region-label" class="region-label"></div>
+
+  </div>
+
+  <!-- Region selection buttons -->
+  <div id="buttonArea" role="group" aria-label="Region Selection Buttons">
+    <a class="active" onclick="createdRegion(region_geographical)" role="button" tabindex="0">6 ภูมิภาค (ภูมิศาสตร์)</a>
+    <a onclick="createdRegion(region_political)" role="button" tabindex="0">4 ภูมิภาค (การเมือง)</a>
+    <a onclick="createdRegion(region_meteorological)" role="button" tabindex="0">6 ภูมิภาค (อุตุนิยมวิทยา)</a>
+    <a onclick="createdRegion(region_travel)" role="button" tabindex="0">5 ภูมิภาค (การท่องเที่ยว)</a>
+  </div>
+
+  <!-- Load Longdo Map API -->
+  <script src="https://api.longdo.com/map/?key=66eb06d26234481991cec6bb4922c3c1"></script>
+
+  <script>
+    var map;
+
+    var region_geographical = [
+      { 'name': 'กลาง', 'color': '#ffadadaa', 'pivot': { lat: 15.464, lon: 100.281979 }, 'geocode': '1_;26;60;61;62;64;65;66;67;72;73;74;75' },
+      { 'name': 'ใต้', 'color': '#ffd6a5aa', 'pivot': { lat: 8.624196, lon: 98.908688 }, 'geocode': '80;81;82;83;84;85;86;90;91;92;93;94;95;96' },
+      { 'name': 'เหนือ', 'color': '#9bf6ffaa', 'pivot': { lat: 18.843649, lon: 99.556881 }, 'geocode': '5_' },
+      { 'name': 'ตะวันออกเฉียงเหนือ', 'color': '#bdb2ffaa', 'pivot': { lat: 16.182756, lon: 102.589108 }, 'geocode': '3_;4_' },
+      { 'name': 'ตะวันตก', 'color': '#caffbfaa', 'pivot': { lat: 14.476964, lon: 98.980099 }, 'geocode': '63;70;71;76;77' },
+      { 'name': 'ตะวันออก', 'color': '#a0c4ffaa', 'pivot': { lat: 13.330559, lon: 101.633297 }, 'geocode': '20;21;22;23;24;25;27' }
+    ];
+
+    var region_political = [
+      { 'name': 'กลาง', 'color': '#ffadadaa', 'pivot': { lat: 14.17359, lon: 100.364376 }, 'geocode': '1_;20;21;22;23;24;25;26;27;70;71;72;73;74;75;76;77' },
+      { 'name': 'ใต้', 'color': '#ffd6a5aa', 'pivot': { lat: 8.624196, lon: 98.908688 }, 'geocode': '80;81;82;83;84;85;86;90;91;92;93;94;95;96' },
+      { 'name': 'เหนือ', 'color': '#9bf6ffaa', 'pivot': { lat: 17.570455, lon: 99.271237 }, 'geocode': '5_;60;61;62;63;64;65;66;67' },
+      { 'name': 'ตะวันออกเฉียงเหนือ', 'color': '#caffbfaa', 'pivot': { lat: 16.182756, lon: 102.589108 }, 'geocode': '3_;4_' }
+    ];
+
+    var region_meteorological = [
+      { 'name': 'กลาง', 'color': '#ffadadaa', 'pivot': { lat: 14.657728, lon: 100.194088 }, 'geocode': '1_;60;61;72;73;74;75' },
+      { 'name': 'ใต้', 'color': '#ffd6a5aa', 'pivot': { lat: 8.624196, lon: 98.908688 }, 'geocode': '80;81;82;83;84;85;86;90;91;92;93;94;95;96' },
+      { 'name': 'เหนือ', 'color': '#9bf6ffaa', 'pivot': { lat: 17.570455, lon: 99.271237 }, 'geocode': '5_;62;63;64;65;66;67' },
+      { 'name': 'ตะวันออกเฉียงเหนือ', 'color': '#bdb2ffaa', 'pivot': { lat: 16.182756, lon: 102.589108 }, 'geocode': '3_;4_' },
+      { 'name': 'ตะวันตก', 'color': '#caffbfaa', 'pivot': { lat: 14.476964, lon: 98.980099 }, 'geocode': '70;71;76;77' },
+      { 'name': 'ตะวันออก', 'color': '#a0c4ffaa', 'pivot': { lat: 13.330559, lon: 101.633297 }, 'geocode': '20;21;22;23;24;25;26;27' }
+    ];
+
+    var region_travel = [
+      { 'name': 'กลาง', 'color': '#ffadadaa', 'pivot': { lat: 14.17359, lon: 100.364376 }, 'geocode': '1_;70;71;72;73;74;75;76;77;26' },
+      { 'name': 'ใต้', 'color': '#ffd6a5aa', 'pivot': { lat: 8.624196, lon: 98.908688 }, 'geocode': '80;81;82;83;84;85;86;90;91;92;93;94;95;96' },
+      { 'name': 'เหนือ', 'color': '#9bf6ffaa', 'pivot': { lat: 17.570455, lon: 99.271237 }, 'geocode': '5_;60;61;62;63;64;65;66;67;' },
+      { 'name': 'ตะวันออกเฉียงเหนือ', 'color': '#bdb2ffaa', 'pivot': { lat: 16.182756, lon: 102.589108 }, 'geocode': '3_;4_' },
+      { 'name': 'ตะวันออก', 'color': '#a0c4ffaa', 'pivot': { lat: 13.330559, lon: 101.633297 }, 'geocode': '20;21;22;23;24;25;27' }
+    ];
+
+    function init() {
+  map = new longdo.Map({
+    placeholder: document.getElementById('map'),
+  });
+
+  // ขอบเขตประเทศไทย (lat, lon) — ปรับได้ละเอียดตามต้องการ
+  var thailandBounds = [
+    { lat: 5.5, lon: 97.3 },   // Southwest corner
+    { lat: 20.5, lon: 105.9 }  // Northeast corner
+  ];
+
+  // เซ็ตขอบเขตให้แผนที่
+  map.limitBounds(thailandBounds);
+
+  // เซ็ตตำแหน่งเริ่มต้นและ zoom ที่เหมาะสม
+  map.location({ lat: 13.736717, lon: 100.523186 }); // กรุงเทพฯ
+  map.zoom(6);
+
+  map.enableFilter(longdo.Filter.Light);
+
+  createdRegion(region_geographical);
+
+  // อัพเดตเวลาใน topbar
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+}
+
+
+    function createdRegion(type) {
+      map.Overlays.clear();
+      type.forEach(element => {
+        let object = new longdo.Overlays.Object(element.geocode, 'IG', {
+          title: element.name,
+          label: element.name,
+          pivot: element.pivot,
+          lineColor: '#000',
+          lineWidth: 1,
+          fillColor: element.color,
+          combine: true
+        });
+        map.Overlays.load(object);
+      });
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      const content = document.querySelector(".content");
+      sidebar.classList.toggle("collapsed");
+      content.classList.toggle("sidebar-collapsed");
+    }
+
+    // ฟังก์ชันอัพเดตเวลาปัจจุบัน
+    function updateDateTime() {
+      const now = new Date();
+      const options = {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      };
+      const formatted = now.toLocaleString("th-TH", options);
+      document.getElementById("datetime").textContent = formatted;
+    }
+
+    // ปุ่มเลือกภูมิภาค active class
+    var header = document.getElementById("buttonArea");
+    var btns = header.getElementsByTagName("a");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener("click", function () {
+        for (var j = 0; j < btns.length; j++) {
+          btns[j].classList.remove("active");
+        }
+        this.classList.add("active");
+      });
+    }
+
+    // เรียก init หลังโหลด window เสร็จ
+    window.onload = init;
+
+    
+  </script>
+
+  <!-- Bootstrap 5 JS Bundle (Popper + Bootstrap JS) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
