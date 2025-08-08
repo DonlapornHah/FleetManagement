@@ -197,18 +197,18 @@ if (!$result) {
   <span>รายการรถทั้งหมด</span>
       <button class="btn btn-light btn-sm" id="btnAddCar" data-bs-toggle="modal" data-bs-target="#manageCarModal"><i class="bi bi-plus-circle me-1"></i> เพิ่มรถ</button>
           </div>
-    <div class="card-body table-responsive">
-      <table class="table table-bordered text-center align-middle">
-        <thead class="table-secondary">
-          <tr>
-            <th>รหัสรถ</th>
-            <th>ทะเบียนรถ</th>
-            <th>สายเดินรถ</th>
-            <th>ประเภทรถ</th>
-            <th>สถานะ</th>
-            <th>แก้ไข</th>
-          </tr>
-        </thead>
+<div class="card-body table-responsive p-0">
+  <table class="table table-bordered text-center align-middle mb-0">
+    <thead class="table-secondary">
+      <tr>
+        <th style="font-weight: 300;">รหัสรถ</th>
+        <th style="font-weight: 300;">ทะเบียนรถ</th>
+        <th style="font-weight: 300;">สายเดินรถ</th>
+        <th style="font-weight: 300;">ประเภทรถ</th>
+        <th style="font-weight: 300;">สถานะ</th>
+        <th style="font-weight: 300;">แก้ไข</th>
+      </tr>
+    </thead>
         <tbody>
           <?php if ($result->num_rows > 0): ?>
             <?php while ($row = $result->fetch_assoc()): ?>

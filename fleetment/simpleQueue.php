@@ -215,7 +215,7 @@ $all_routes = $route_names;
           <div class="card-header fw-bold">เลือกภูมิภาค และ สายเดินรถ</div>
           <div class="card-body">
             <div class="mb-3">
-              <label for="zone-select" class="form-label">เลือกภูมิภาค:</label>
+              <label for="zone-select" class="form-label">เลือกภูมิภาค :</label>
               <select id="zone-select" name="zone" class="form-select" onchange="document.getElementById('filter-form').submit()">
                 <option value="">-- เลือกทั้งหมด --</option>
                 <?php foreach ($zones as $bz_id => $bz_name): ?>
@@ -227,7 +227,7 @@ $all_routes = $route_names;
             </div>
 
             <div class="mb-2 d-flex justify-content-between align-items-center">
-              <label class="form-label mb-0">สายเดินรถ:</label>
+              <label class="form-label mb-0">สายเดินรถ :</label>
               <div class="d-flex gap-2">
                 <button type="button" id="select-all-routes" class="btn btn-sm btn-outline-primary">เลือกทั้งหมด</button>
                 <button type="button" id="clear-all-routes" class="btn btn-sm btn-outline-secondary">ล้างทั้งหมด</button>
@@ -767,11 +767,8 @@ const routeNames = <?php echo json_encode($route_names, JSON_UNESCAPED_UNICODE);
 
         // --- ปุ่ม toggle สำหรับเลือกสถานะการบันทึก (มาตรฐาน/แผนที่บันทึกไว้) ---
         html += `<div class="card mb-4 ">
-            <div class="card-header d-flex justify-content-between align-items-center" 
-     style="background-color: #d6d6d6ff; color: black;">
-    
+            <div class="card-header d-flex justify-content-between align-items-center bg-secondary text-white" 
     <h6 class="mb-0">สายเดินรถ : ${routeNames[br_id] || br_id}</h6>
-
     <div class="btn-group btn-group-sm" role="group" aria-label="plan type toggle align-items-center">
         <input type="radio" class="btn-check" 
                name="plan_type[${br_id}]" 
@@ -801,17 +798,18 @@ const routeNames = <?php echo json_encode($route_names, JSON_UNESCAPED_UNICODE);
                     <label for="plan_name_${routeNames[br_id] || br_id}" class="form-label"><b>ชื่อแผนสำหรับสายนี้ :</b></label>
                     <input type="text" class="form-control" name="plan_name[${routeNames[br_id] || br_id}]" id="plan_name_${br_id}" placeholder="ระบุชื่อแผน (เช่น แผนเดินรถรอบเช้า)" >
                 </div>
-                <b>Request</b>
+                <b>Request :</b>
                 <div class="table-responsive">
+                <br>
                 <table class="table table-bordered align-middle table-sm">
-                    <thead class="table-primary">
+                    <thead class="table-secondary">
                         <tr>
-                            <th class="text-center">ลำดับ</th>
-                            <th class="text-center">รหัสประจำคิว</th>
-                            <th class="text-center">queue request</th>
-                            <th class="text-center">เวลา</th>
-                            <th class="text-center">เวลาเดินทาง (นาที)</th>
-                            <th class="text-center">Action</th>
+                            <th class="text-center" style="font-weight: 300;">ลำดับ</th>
+                            <th class="text-center" style="font-weight: 300;">รหัสประจำคิว</th>
+                            <th class="text-center" style="font-weight: 300;">queue request</th>
+                            <th class="text-center" style="font-weight: 300;">เวลา</th>
+                            <th class="text-center" style="font-weight: 300;">เวลาเดินทาง (นาที)</th>
+                            <th class="text-center" style="font-weight: 300;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-${br_id}-request">`;
@@ -884,12 +882,12 @@ const routeNames = <?php echo json_encode($route_names, JSON_UNESCAPED_UNICODE);
         html += `
                 <div class="table-responsive">
                 <table class="table table-bordered align-middle table-sm">
-                    <thead class="table-primary">
+                    <thead class="table-secondary">
                         <tr>
-                            <th class="text-center">ลำดับ</th>
-                            <th class="text-center">รหัสประจำคิว</th>
-                            <th class="text-center">Queue reserve</th>
-                            <th class="text-center">Action</th>
+                            <th class="text-center" style="font-weight: 300;">ลำดับ</th>
+                            <th class="text-center" style="font-weight: 300;">รหัสประจำคิว</th>
+                            <th class="text-center" style="font-weight: 300;">Queue reserve</th>
+                            <th class="text-center" style="font-weight: 300;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-${br_id}-reserve">`;

@@ -1,89 +1,64 @@
 <?php 
-include 'config.php';
+    // เชื่อมต่อฐานข้อมูล
+    include 'config.php';
 
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
+    // ตรวจสอบการเชื่อมต่อฐานข้อมูล
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
 
-// ดึงข้อมูลภูมิภาค (bus_zone) สำหรับ dropdown
-$zones = [];
-$sql_zone = "SELECT bz_id, bz_name_th FROM bus_zone ORDER BY bz_name_th
-";
-$result_zone = mysqli_query($conn, $sql_zone);
-while ($row = mysqli_fetch_assoc($result_zone)) {
-    $zones[$row['bz_id']] = $row['bz_name_th'];
-}
-
-// รับค่าภาคที่เลือกจาก GET
-$selected_zone = isset($_GET['zone']) && is_numeric($_GET['zone']) ? (int)$_GET['zone'] : null;
-
-// ดึงข้อมูลสายรถ (กรองตาม zone ถ้ามี)
-$route_ids = [];
-$route_names = [];
-$sql_routes = "
-    SELECT 
-        br.br_id, 
-        CONCAT(lo_start.locat_name_th, ' - ', lo_end.locat_name_th) AS route_name
-    FROM bus_routes br
-    LEFT JOIN location lo_start ON br.br_start = lo_start.locat_id
-    LEFT JOIN location lo_end ON br.br_end = lo_end.locat_id
-";
-if ($selected_zone) {
-    $sql_routes .= " WHERE br.bz_id = $selected_zone ";
-}
-$sql_routes .= " ORDER BY route_name ASC";
-$result_routes = mysqli_query($conn, $sql_routes);
-while ($row = mysqli_fetch_assoc($result_routes)) {
-    $route_ids[] = $row['br_id'];
-    $route_names[$row['br_id']] = $row['route_name'];
-    $route_name_to_id = array_flip($route_names);
-
-    
-}
-
-// ดึงข้อมูล queue_request ตามสายที่ได้
-$request = [];
-if (!empty($route_ids)) {
-    $sql_request = "SELECT * FROM queue_request WHERE br_id IN (" . implode(',', $route_ids) . ") ORDER BY br_id";
+    // กำหนดสายที่ต้องการดึงข้อมูล
+    $route = [1,2,3,4];
+    // ดึงข้อมูล queue_request ทั้งหมดจากฐานข้อมูล เรียงตาม br_id
+    $sql_request = "SELECT * FROM `queue_request` WHERE br_id IN (" . implode(',', $route) . ") ORDER BY br_id";
     $result_request = mysqli_query($conn, $sql_request);
+
+    // สร้าง array สำหรับเก็บข้อมูล request/reserve ของแต่ละ br_id
+    $request = [];
     while ($row = mysqli_fetch_assoc($result_request)) {
         $qr_request = json_decode($row['qr_request'], true);
-        $br_id = $row['br_id'];
-        $request[$br_id]['request'] = $qr_request['request'] ?? [];
-        $request[$br_id]['reserve'] = $qr_request['reserve'] ?? [];
-        $request[$br_id]['time'] = $qr_request['time'] ?? [];
-        $request[$br_id]['time_plus'] = $qr_request['time_plus'] ?? [];
-        $request[$br_id]['point'] = $qr_request['point'] ?? [];
-        $request[$br_id]['ex'] = $qr_request['ex'] ?? [];
+        $request[$row['br_id']]['request'] = isset($qr_request['request']) ? $qr_request['request'] : [];
+        $request[$row['br_id']]['reserve'] = isset($qr_request['reserve']) ? $qr_request['reserve'] : [];
+        $request[$row['br_id']]['time'] = isset($qr_request['time']) ? $qr_request['time'] : [];
+        $request[$row['br_id']]['time_plus'] = isset($qr_request['time_plus']) ? $qr_request['time_plus'] : [];
+        $request[$row['br_id']]['point'] = isset($qr_request['point']) ? $qr_request['point'] : []; 
+        $request[$row['br_id']]['ex'] = isset($qr_request['ex']) ? $qr_request['ex'] : []; 
     }
-}
 
-// ดึงข้อมูลจุดพัก
-$point = [];
-$sql_point = "
-    SELECT 
-        brk_in_route.br_id AS br_id,
-        brk_in_route.bir_time AS bir_time,
-        brk_in_route.brkp_id AS brkp_id,
-        break_point.brkp_name AS brkp_name,
-        brk_in_route.bir_type AS brkp_type,
-        brk_in_route.bir_status AS brkp_status
-    FROM brk_in_route
-    LEFT JOIN break_point ON brk_in_route.brkp_id = break_point.brkp_id
-";
-$result_point = mysqli_query($conn, $sql_point);
-while ($row = mysqli_fetch_assoc($result_point)) {
-    $point[$row['br_id']][] = [
-        'id' => $row['brkp_id'],
-        'name' => $row['brkp_name'],
-        'time' => $row['bir_time'],
-        'status' => $row['brkp_status'],
-        'type' => $row['brkp_type']
-    ];
-}
+    $sql_point = "SELECT 
+                        brk_in_route.br_id AS br_id,
+                        brk_in_route.bir_time AS bir_time,
+                        brk_in_route.brkp_id AS brkp_id,
+                        break_point.brkp_name AS brkp_name,
+                        brk_in_route.bir_type AS brkp_type,
+                        brk_in_route.bir_status AS brkp_status
+                FROM `brk_in_route` 
+                LEFT JOIN 
+                    break_point 
+                        ON brk_in_route.brkp_id = break_point.brkp_id";
 
-$all_routes = $route_names;
-?>
+    $result_point = mysqli_query($conn, $sql_point);
+
+    while($row = mysqli_fetch_assoc($result_point)) {
+        $point[$row['br_id']][] = [
+            'id' => $row['brkp_id'],
+            'name' => $row['brkp_name'],
+            'time' => $row['bir_time'],
+            'status' => $row['brkp_status'],
+            'type' => $row['brkp_type']
+        ];
+    }
+
+    
+    // ดึง br_id ทั้งหมดที่มีในตารางเพื่อสร้างตัวกรอง
+    $all_routes = [];
+    $sql_all_routes = "SELECT DISTINCT br_id FROM `queue_request` ORDER BY br_id";
+    $result_all_routes = mysqli_query($conn, $sql_all_routes);
+    while ($row = mysqli_fetch_assoc($result_all_routes)) {
+        $all_routes[] = $row['br_id'];
+    }
+    ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -98,58 +73,43 @@ $all_routes = $route_names;
 </head>
 <body class="bg-light">
     <div class="container py-4">
-        
-<form method="get" id="filter-form">
-    <div class="row g-4">
-      <!-- ซ้าย -->
-      <div class="col-md-4 left-column">
-        <div class="card h-100">
-          <div class="card-header fw-bold">เลือกภูมิภาค และ สายเดินรถ</div>
-          <div class="card-body">
-            <div class="mb-3">
-              <label for="zone-select" class="form-label">เลือกภูมิภาค:</label>
-              <select id="zone-select" name="zone" class="form-select" onchange="document.getElementById('filter-form').submit()">
-                <option value="">-- เลือกทั้งหมด --</option>
-                <?php foreach ($zones as $bz_id => $bz_name): ?>
-                  <option value="<?= $bz_id ?>" <?= ($bz_id == $selected_zone) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($bz_name) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
+        <h1 class="mb-4">จัดการคิวมาตรฐาน</h1>
+        <!-- ฟอร์มเลือกวันที่ -->
+        <div class="card mb-4">
+            <div class="card-header">
+                กำหนดวันที่
             </div>
-
-            <div class="mb-2 d-flex justify-content-between align-items-center">
-              <label class="form-label mb-0">สายเดินรถ:</label>
-              <div class="d-flex gap-2">
-                <button type="button" id="select-all-routes" class="btn btn-sm btn-outline-primary">เลือกทั้งหมด</button>
-                <button type="button" id="clear-all-routes" class="btn btn-sm btn-outline-secondary">ล้างทั้งหมด</button>
-              </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="common-date" class="form-label"><strong>วันที่สำหรับสร้างรายการ:</strong></label>
+                        <input type="date" id="common-date" class="form-control">
+                    </div>
+                </div>
             </div>
-
-            <select id="route-select" name="routes[]" multiple class="form-select choices-multiple">
-              <?php foreach ($all_routes as $br_id => $route_name): ?>
-                <option value="<?= $br_id ?>" <?= in_array($br_id, $selected_routes) ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($route_name) ?>
-                </option>
-              <?php endforeach; ?>
-              </select>
-          </div>
         </div>
-      </div>
-
-      <!-- ขวา -->
-      <div class="col-md-8">
-          <div class="card-body" id="request-tables">
-            <?php if (empty($queue_data)): ?>
-              <div class="alert alert-warning text-center">ยังไม่มีคิวรถมาตรฐาน</div>
-            <?php else: ?>
-              <?= $rendered_tables_html ?>
-            <?php endif; ?>
-      </div>
+        <!-- UI เลือกสาย -->
+        <div class="mb-3">
+            <label for="route-select" class="form-label"><b>เลือกสาย (พิมพ์เพื่อค้นหา):</b></label>
+            <div class="d-flex gap-2 mb-2">
+                <button type="button" class="btn btn-sm btn-outline-success" id="select-all-routes-btn">เลือกทุกสาย</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="clear-all-routes-btn">ล้างการเลือก</button>
+            </div>
+            <select class="form-control" id="route-select" multiple>
+                <?php foreach ($all_routes as $r): ?>
+                    <option value="<?php echo $r; ?>" <?php echo in_array($r, $route ?? []) ? 'selected' : ''; ?>>
+                        Route <?php echo $r; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <!-- ตำแหน่งสำหรับ render ตาราง request/reserve -->
+        <div id="request-tables"></div>
     </div>
-  </form>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <!-- Bootstrap JS (optional, สำหรับ dropdowns ฯลฯ) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Choices.js JS (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 </body>
 </html>
 <script>

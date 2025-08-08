@@ -132,7 +132,7 @@ $result = $conn->query($sql);
 <!-- Filter Route -->
       <form method="get" class="row g-3 mb-3">
         <div class="col-md-4">
-          <label for="route_filter" class="form-label fw-semibold">กรองตามสายเดินรถ:</label>
+          <label for="route_filter" class="form-label fw-semibold">เลือกสายเดินรถ:</label>
           <select name="route_filter" id="route_filter" class="form-select">
             <option value="0">-- แสดงทั้งหมด --</option>
             <?php if ($route_result && $route_result->num_rows > 0): ?>
@@ -158,12 +158,12 @@ $result = $conn->query($sql);
       <table class="table table-bordered text-center mb-0">
         <thead class="table-secondary">
           <tr>
-            <th>รหัส</th>
-            <th>ชื่อ - นามสกุล</th>
-            <th>ตำแหน่ง</th>
-            <th>สายรถประจำ</th>
-            <th>สถานะ</th>
-            <th>แก้ไข</th>
+            <th style="font-weight: 300;">รหัส</th>
+            <th style="font-weight: 300;">ชื่อ - นามสกุล</th>
+            <th style="font-weight: 300;">ตำแหน่ง</th>
+            <th style="font-weight: 300;">สายรถประจำ</th>
+            <th style="font-weight: 300;">สถานะ</th>
+            <th style="font-weight: 300;">แก้ไข</th>
           </tr>
         </thead>
         <tbody>

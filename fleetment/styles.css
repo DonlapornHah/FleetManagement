@@ -205,3 +205,6 @@ body {
 thead.table-primary th {
   font-weight: 300; /* ตัวอักษรบาง */
 }
+thead.table-secondary th {
+  font-weight: 300; /* ตัวอักษรบาง */
+}

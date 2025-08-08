@@ -179,7 +179,7 @@ $result = $conn->query($sql);
   <!-- Filter Route -->
   <form method="get" class="row g-3 mb-3">
     <div class="col-md-4">
-      <label for="route_filter" class="form-label fw-semibold">กรองตามสายเดินรถ:</label>
+      <label for="route_filter" class="form-label fw-semibold">เลือกสายเดินรถ:</label>
       <select name="route_filter" id="route_filter" class="form-select">
         <option value="0">-- แสดงทั้งหมด --</option>
         <?php foreach ($routes as $r): ?>
@@ -204,12 +204,12 @@ $result = $conn->query($sql);
     <table class="table table-bordered text-center align-middle">
       <thead class="table-secondary">
         <tr>
-          <th>รหัส</th>
-          <th>ชื่อ - สกุล</th>
-          <th>ตำแหน่ง</th>
-          <th>สายรถประจำ</th>
-          <th>สถานะ</th>
-          <th>จัดการ</th>
+          <th style="font-weight: 300;">รหัส</th>
+          <th style="font-weight: 300;">ชื่อ - สกุล</th>
+          <th style="font-weight: 300;">ตำแหน่ง</th>
+          <th style="font-weight: 300;">สายรถประจำ</th>
+          <th style="font-weight: 300;">สถานะ</th>
+          <th style="font-weight: 300;">จัดการ</th>
         </tr>
       </thead>
       <tbody>

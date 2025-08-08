@@ -164,17 +164,17 @@ $result = $conn->query($sql);
   </button>
 </div>
 
-        <div class="card-body table-responsive">
-          <table class="table table-bordered text-center align-middle">
+<div class="card-body table-responsive p-0">          
+  <table class="table table-bordered text-center align-middle">
             <thead class="table-secondary">
               <tr>
-                <th>รหัส</th>
-                <th>ชื่อ-นามสกุล</th>
-                <th>ทะเบียนรถประจำ</th>
-                <th>สายเดินรถ</th>
-                <th>ตำแหน่ง</th>
-                <th>สถานะ</th>
-                <th>แก้ไข</th>
+                <th style="font-weight: 300;">รหัส</th>
+                <th style="font-weight: 300;">ชื่อ-นามสกุล</th>
+                <th style="font-weight: 300;">ทะเบียนรถประจำ</th>
+                <th style="font-weight: 300;">สายเดินรถ</th>
+                <th style="font-weight: 300;">ตำแหน่ง</th>
+                <th style="font-weight: 300;">สถานะ</th>
+                <th style="font-weight: 300;">แก้ไข</th>
 
               </tr>
             </thead>
