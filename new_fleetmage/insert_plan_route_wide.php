@@ -1,21 +1,19 @@
 <?php
 include 'config.php';
 
-$plan_name = $_POST['plan_name'];
-$route_number = $_POST['route_number'];
-$plan_type = $_POST['plan_type'] ?? '';
-$bus_id = $_POST['bus_id'] ?? '';
-$total_distance = $_POST['total_distance'] ?? '';
-$total_time = $_POST['total_time'] ?? '';
+// รับค่าจากฟอร์ม
+$plan_name      = $_POST['plan_name'];
+$route_number   = $_POST['route_number'];
+$plan_type      = $_POST['plan_type'] ?? '';
+$bus_id         = $_POST['bus_id'] ?? '';
+$total_distance = $_POST['total_distance'] ?? 0;
+$total_time     = $_POST['total_time'] ?? '00:00:00';
+$quetime        = $_POST['quetime'] ?? '00:00:00';
+$send_point1    = $_POST['junction1'] ?? '';
+$send_point2    = $_POST['junction2'] ?? '';
 $selected_stops = $_POST['selected_stop'] ?? [];
 
-// เตรียมคอลัมน์จุดจอด
-$stops_cols = [];
-foreach($selected_stops as $stop){
-    $stops_cols[$stop] = '1';
-}
-
-// ค่า default สำหรับทุกจุดจอด
+// รายชื่อจุดจอดทั้งหมด
 $all_stops = [
     'stop_bkk_station','stop_bkk_mochit','stop_rangsit','stop_wangnoi','stop_prademchai',
     'stop_lamtakong_pump','stop_police_khlongphai','stop_lamtakong_change','stop_banmittraphap_change',
@@ -27,29 +25,39 @@ $all_stops = [
     'stop_mtec','stop_kk3_station'
 ];
 
-$cols_sql = "plan_name, route_number, plan_type, bus_id, total_distance, total_time";
-$vals_sql = "?, ?, ?, ?, ?, ?";
+// เตรียมคอลัมน์และค่า
+$cols = ['plan_name','route_number','plan_type','bus_id','junction1','junction2','total_distance','total_time','quetime'];
+$placeholders = array_fill(0, count($cols), '?');
+$values = [$plan_name,$route_number,$plan_type,$bus_id,$send_point1,$send_point2,$total_distance,$total_time,$quetime];
+$types = 'ssssssdds'; // s=string, d=double
 
-$values = [$plan_name, $route_number, $plan_type, $bus_id, $total_distance, $total_time];
-
+// เพิ่มคอลัมน์จุดจอด
 foreach($all_stops as $stop){
-    $cols_sql .= ", $stop";
-    $vals_sql .= ", ?";
-    $values[] = isset($stops_cols[$stop]) ? '1' : '0';
+    $cols[] = $stop;
+    $placeholders[] = '?';
+    $values[] = in_array($stop,$selected_stops) ? '1' : '0';
+    $types .= 's';
 }
 
-// Insert
-$sql = "INSERT INTO plan_route_wide 
-(plan_name, route_number, plan_type, send_point1, send_point2, total_distance, total_time)
-VALUES (?, ?, ?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ssssddd", $plan_name, $route_number, $plan_type, $send_point1, $send_point2, $total_distance, $total_time);
-$stmt->execute();
+// สร้าง SQL
+$sql = "INSERT INTO plan_route_wide (".implode(',', $cols).") VALUES (".implode(',', $placeholders).")";
 
+$stmt = $conn->prepare($sql);
+if(!$stmt){
+    die("Prepare failed: ".$conn->error);
+}
+
+// bind_param แบบ dynamic
+$stmt->bind_param($types, ...$values);
 
 if($stmt->execute()){
-    header("Location: plan.php"); // กลับไปหน้าเดิม
+    // เพิ่มเสร็จแล้ว แจ้ง alert และกลับหน้า plan.php
+    echo "<script>
+            alert('เพิ่มแผนเรียบร้อยแล้ว!');
+            window.location.href='plan.php';
+          </script>";
     exit;
 }else{
     echo "Error: " . $stmt->error;
 }
+?>
